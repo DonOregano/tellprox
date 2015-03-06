@@ -1,6 +1,6 @@
-import bottle_helpers as bh
+from . import bottle_helpers as bh
 import random, string
-import utilities
+from . import utilities
 from bottle import request, template
 
 class API(object):
@@ -29,7 +29,7 @@ class API(object):
 		})
 
 	def add_route(self, key, funcs):
-		for v in funcs.values():
+		for v in list(funcs.values()):
 			inputs = v.get('inputs', [])
 			if not type(inputs) is list:
 				inputs = [inputs]
@@ -55,8 +55,8 @@ class API(object):
 		
 	def output(self, func):
 		"""A list of all API calls"""
-		return {k : { kk : {'description': vv['fn'].__doc__, 'inputs': vv['inputs'] } for kk,vv in v.iteritems() }
-			for k, v in self.allroutes.iteritems()}
+		return {k : { kk : {'description': vv['fn'].__doc__, 'inputs': vv['inputs'] } for kk,vv in v.items() }
+			for k, v in self.allroutes.items()}
 	
 	def restart(self, func):
 		return bh.restart()
@@ -90,9 +90,9 @@ class API(object):
 			auth = { 'key': key };
 			this.getAuthData = function(){return auth};
 		}'''
-		for groupName, groupValue in self.allroutes.iteritems():
+		for groupName, groupValue in self.allroutes.items():
 			methods = []
-			for methodName, methodValue in groupValue.iteritems():
+			for methodName, methodValue in groupValue.items():
 				argumentNames = [arg['name'] for arg in methodValue['inputs']]
 				methodBody = self.generate_method(groupName, methodName, argumentNames)
 				argumentNames.append('onComplete')

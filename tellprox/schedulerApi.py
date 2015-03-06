@@ -1,10 +1,10 @@
 from bottle import *
 from operator import itemgetter
-from scheduler import Scheduler
-import bottle_helpers as bh
+from .scheduler import Scheduler
+from . import bottle_helpers as bh
 import tellcore.telldus as td
 import time
-import bottle_helpers as bh
+from . import bottle_helpers as bh
 
 class SchedulerAPI(object):
 	core = td.TelldusCore()
@@ -51,7 +51,7 @@ class SchedulerAPI(object):
 	def joblist(self, func):
 		"""Job list"""
 		return { 'job': [
-			job for id, job in self.jobs.iteritems()
+			job for id, job in self.jobs.items()
 		]}
 	
 	def jobinfo(self, func, id):
@@ -73,7 +73,7 @@ class SchedulerAPI(object):
 			return newDate
 
 		# Convert days into 0 based integers
-		daysToRun = map(lambda d: int(d) - 1, weekdays.split(','))
+		daysToRun = [int(d) - 1 for d in weekdays.split(',')]
 		allDays = [calcRunTime(day) for day in daysToRun]
 		allDays.sort() 
 		if not allDays:
@@ -96,7 +96,7 @@ class SchedulerAPI(object):
 	
 		# If no ID is provided, find the next available
 		if id == 0:
-			keys = self.jobs.keys()
+			keys = list(self.jobs.keys())
 			if len(keys) == 0:
 				id = 1
 			else:

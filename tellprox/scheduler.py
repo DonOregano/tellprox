@@ -1,7 +1,7 @@
 from threading import Timer
-from configObserver import ConfigObserver
+from .configObserver import ConfigObserver
 import time, datetime
-import bottle_helpers as bh
+from . import bottle_helpers as bh
 
 class Scheduler(object):
 	nextJob = []
@@ -16,7 +16,7 @@ class Scheduler(object):
 		# Subscribe to changes in configs
 		class JobsWatcher(object):
 			def notify(subself, observable, key):
-				print "scheduler key changed"
+				print("scheduler key changed")
 				self.start()
 
 		watcher = JobsWatcher()
@@ -38,7 +38,7 @@ class Scheduler(object):
 	def calcSoonestRunTime(self):
 		activeJobs = [
 			job['nextRunTime']
-				for job in self.jobs.itervalues()
+				for job in self.jobs.values()
 					if job['active'] == '1'
 		]
 		
@@ -48,7 +48,7 @@ class Scheduler(object):
 
 	def getJobsByRunTime(self, searchTime):
 		return [
-			job for job in self.jobs.itervalues()
+			job for job in self.jobs.values()
 				if job['nextRunTime'] == searchTime
 		]
 		
@@ -62,19 +62,19 @@ class Scheduler(object):
 
 				timeToNextJob = soonestTime - nowInEpoch
 				if timeToNextJob <= 0:
-					print "FATAL ERROR: " + str(soonestTime) + " & " + str(nowInEpoch)
+					print("FATAL ERROR: " + str(soonestTime) + " & " + str(nowInEpoch))
 					return
-				print "Next job scheduled for " + str(datetime.datetime.fromtimestamp(soonestTime))
+				print("Next job scheduled for " + str(datetime.datetime.fromtimestamp(soonestTime)))
 				self.timer = Timer(timeToNextJob, self.runCommand, ())
 				self.timer.start()
 				return
-		print "Scheduler has no jobs to run"
+		print("Scheduler has no jobs to run")
 		
 	def runJob(self, job):
 		deviceId = int(job['deviceId'])
 		method = int(job['method'])
 		value = int(job['methodValue'])
-		print self.tellstick.device_command('', deviceId, value, method)
+		print(self.tellstick.device_command('', deviceId, value, method))
 	
 	def runCommand(self):
 		if len(self.nextJob) > 0:
@@ -85,5 +85,5 @@ class Scheduler(object):
 		self.updateAndRunTimers()
 	
 	def calcAllRunTimes(self):
-		for id, job in self.jobs.iteritems():
+		for id, job in self.jobs.items():
 			bh.calcNextRunTime(job)

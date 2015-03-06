@@ -2,25 +2,25 @@
 
 import sys
 if sys.version_info < (2, 5):
-    print "Sorry, requires Python 2.5, 2.6 or 2.7."
+    print("Sorry, requires Python 2.5, 2.6 or 2.7.")
     sys.exit(1)
 
 import json, bottle
 import sys, os
-import utilities
-import urllib
+from . import utilities
+import urllib.request, urllib.parse, urllib.error
 
 # Child APIs
-from api import API
-from tellstick import TellstickAPI
-from config import ConfigAPI
-from scheduler import Scheduler
-from schedulerApi import SchedulerAPI
+from .api import API
+from .tellstick import TellstickAPI
+from .config import ConfigAPI
+from .scheduler import Scheduler
+from .schedulerApi import SchedulerAPI
 
 # Resources
 from configobj import ConfigObj
 from bottle import template, request
-from configObserver import ConfigObserver
+from .configObserver import ConfigObserver
 from validate import Validator
 from beaker.middleware import SessionMiddleware
 from werkzeug.security import check_password_hash
@@ -45,7 +45,7 @@ def main():
 	result = config.validate(validator, copy = True)
 
 	if result is False:
-		print "Config file validation failed"
+		print("Config file validation failed")
 		sys.exit(1)
 
 	api = API(app, config, VERSION)
@@ -57,7 +57,7 @@ def main():
 	
 	class ConfigWatcher(object):
 		def notify(self, observable, key):
-			print "writing"
+			print("writing")
 			config.write()
 
 	watcher = ConfigWatcher()

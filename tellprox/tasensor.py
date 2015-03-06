@@ -7,7 +7,7 @@ class TASensor(object):
 		
 		# Create a config entry with default values if one doesn't exist
 		sensor_config = config['sensors']
-		if not self.id in sensor_config.keys():
+		if not self.id in list(sensor_config.keys()):
 			sensor_config[self.id] = {
 				'ignore' : 0,
 				'name'   : None

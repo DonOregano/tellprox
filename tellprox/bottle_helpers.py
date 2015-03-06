@@ -36,7 +36,7 @@ def format_response(input, out_format, root_tag, pretty_print = False):
 	else:
 		# Crude. Need to loop through properly and rip out keys starting with @
 		if isinstance(input, dict):
-			for child in input.values():
+			for child in list(input.values()):
 				if isinstance(child, list):
 					for index in range(len(child)):
 						if isinstance(child[index], dict):
@@ -54,10 +54,10 @@ def success_response():
 	return { 'status': 'success' } 
 
 def set_attribute(dictionary):
-	return dict(("@" + k, v) for k, v in dictionary.items())
+	return dict(("@" + k, v) for k, v in list(dictionary.items()))
 
 def hide_attribute(dictionary):
-	return dict((k[1:] if k.startswith('@') else k, v) for k, v in dictionary.items())
+	return dict((k[1:] if k.startswith('@') else k, v) for k, v in list(dictionary.items()))
 
 def prettify(elem):
 	"""Return a pretty-printed XML string for the Element."""
@@ -71,7 +71,7 @@ def _convert_dict_to_xml_recurse(parent, dictitem, listnames):
 	assert not isinstance(dictitem, list)
 
 	if isinstance(dictitem, dict):
-		for (tag, child) in sorted(dictitem.iteritems()):
+		for (tag, child) in sorted(dictitem.items()):
 			if isinstance(child, list):
 				for listchild in child:
 					elem = ET.Element(tag)
@@ -85,7 +85,7 @@ def _convert_dict_to_xml_recurse(parent, dictitem, listnames):
 					parent.append(elem)
 					_convert_dict_to_xml_recurse(elem, child, listnames)
 	elif not dictitem is None:
-		parent.text = unicode(dictitem)
+		parent.text = str(dictitem)
 
 			
 def calcNextRunTime(job):

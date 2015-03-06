@@ -1,8 +1,8 @@
 from bottle import *
 from tellcore.constants import *
-from msensor import *
-from tasensor import *
-import bottle_helpers as bh
+from .msensor import *
+from .tasensor import *
+from . import bottle_helpers as bh
 import tellcore.telldus as td
 
 def map_response(cmdresp, id = '', method = ''):
@@ -217,7 +217,7 @@ class TellstickAPI(object):
 		return {
 			'device': [
 				self.device_to_dict(device, supportedMethods, False)
-					for device in self.devices.values()
+					for device in list(self.devices.values())
 			]
 		}
 
@@ -263,7 +263,7 @@ class TellstickAPI(object):
 	
 	def get_device(self, id):
 		self.load_devices()
-		if (self.devices.has_key(id)):
+		if (id in self.devices):
 			return self.devices[id]
 		return None
 
@@ -328,7 +328,7 @@ class TellstickAPI(object):
 		includeIgnored = True if includeIgnored == 1 else False
 		return { 'sensor': [
 			self.sensor_to_dict(sensor, False)
-				for id, sensor in self.sensors.iteritems()
+				for id, sensor in self.sensors.items()
 				if includeIgnored or int(sensor.ignore) == 0
 		]}
 	
@@ -337,7 +337,7 @@ class TellstickAPI(object):
 		# The ID should be an integer, but we store them in the dictionary as
 		# strings, so treat as such
 		id = str(id)
-		if (self.sensors.has_key(id)):
+		if (id in self.sensors):
 			return self.sensors[id]
 		return None
 	
@@ -461,7 +461,7 @@ class TellstickAPI(object):
 				'sensorId'      : sensor.raw.id,
 				'timezoneoffset': 7200
 			}
-			base_dict = dict(base_dict.items() + extra_dict.items())
+			base_dict = dict(list(base_dict.items()) + list(extra_dict.items()))
 		else:
 			base_dict['clientName'] = self.clientName()
 		return base_dict

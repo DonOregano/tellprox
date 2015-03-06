@@ -1,4 +1,4 @@
-import os, urllib, httplib
+import os, urllib.request, urllib.parse, urllib.error, http.client
 
 def full_path(sub_path):
     return os.path.dirname(__file__) + sub_path
@@ -11,7 +11,7 @@ def readfile(sub_path):
 
 #TODO make this generic
 def generateCompiledJS(jsApi, outputFile):
-	params = urllib.urlencode([
+	params = urllib.parse.urlencode([
 		('js_code', readfile('/static/js/jquery-2.1.0.min.js')),
 		('js_code', readfile('/static/js/jquery.toast.min.js')),
 		('js_code', readfile('/static/js/bootstrap.min.js')),
@@ -27,7 +27,7 @@ def generateCompiledJS(jsApi, outputFile):
 
 	# Always use the following value for the Content-type header.
 	headers = { "Content-type": "application/x-www-form-urlencoded" }
-	conn = httplib.HTTPConnection('closure-compiler.appspot.com')
+	conn = http.client.HTTPConnection('closure-compiler.appspot.com')
 	conn.request('POST', '/compile', params, headers)
 	response = conn.getresponse()
 	data = response.read()

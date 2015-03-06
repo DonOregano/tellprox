@@ -1,4 +1,4 @@
-import bottle_helpers as bh
+from . import bottle_helpers as bh
 from werkzeug.security import generate_password_hash
 
 class ConfigAPI(object):
@@ -26,7 +26,7 @@ class ConfigAPI(object):
 		})
 		
 	def getall(self, func):
-		return { k:v for k, v in self.config.iteritems() }
+		return { k:v for k, v in self.config.items() }
 	
 	def get(self, func, item):
 		if not item:
