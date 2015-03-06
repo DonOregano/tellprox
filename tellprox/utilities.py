@@ -30,7 +30,7 @@ def generateCompiledJS(jsApi, outputFile):
 	conn = http.client.HTTPConnection('closure-compiler.appspot.com')
 	conn.request('POST', '/compile', params, headers)
 	response = conn.getresponse()
-	data = response.read()
+	data = response.read().decode("utf-8")
 	conn.close()
 	#todo helper method
 	f = open(outputFile, 'w')

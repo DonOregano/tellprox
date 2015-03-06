@@ -1,9 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import sys
-if sys.version_info < (2, 5):
-    print("Sorry, requires Python 2.5, 2.6 or 2.7.")
-    sys.exit(1)
 
 import json, bottle
 import sys, os
@@ -39,165 +36,165 @@ app = bottle.Bottle()
 api = None
 
 def main():
-	global api
-	
-	root_app = bottle.Bottle()
-	result = config.validate(validator, copy = True)
+    global api
 
-	if result is False:
-		print("Config file validation failed")
-		sys.exit(1)
+    root_app = bottle.Bottle()
+    result = config.validate(validator, copy = True)
 
-	api = API(app, config, VERSION)
-	ConfigAPI(api, config)
-	tellstick = TellstickAPI(api, config, VERSION)
-	
-	scheduler = Scheduler(config, tellstick)
-	SchedulerAPI(api, config)
-	
-	class ConfigWatcher(object):
-		def notify(self, observable, key):
-			print("writing")
-			config.write()
+    if result is False:
+        print("Config file validation failed")
+        sys.exit(1)
 
-	watcher = ConfigWatcher()
-	config.observe(watcher)
-	
-	if config['installed'] != VERSION:
-		api.install()
-	
-	if config['webroot']:
-		root_app.mount(config['webroot'], app)
-	else:
-		root_app.merge(app)
+    api = API(app, config, VERSION)
+    ConfigAPI(api, config)
+    tellstick = TellstickAPI(api, config, VERSION)
 
-	session_opts = {
-		'session.type': 'cookie',
-		'session.validate_key': config['cookieKey'],
-		'session.auto': True,
-	}
+    scheduler = Scheduler(config, tellstick)
+    SchedulerAPI(api, config)
 
-	bottle.run(SessionMiddleware(root_app, session_opts),
-		host = config['host'],
-		port = config['port'],
-		debug = config['debug'],
-		reloader = False,
-		server = 'cherrypy')
+    class ConfigWatcher(object):
+        def notify(self, observable, key):
+            print("writing")
+            config.write()
 
-	if scheduler:
-		scheduler.stop()
-	
-	# The goal was to have all changes to the config call the watcher
-	# method which writes to file. Unfortunately subsections wouldn't
-	# play along, so write to file once we've finished with the service
-	config.write()
+    watcher = ConfigWatcher()
+    config.observe(watcher)
+
+    if config['installed'] != VERSION:
+        api.install()
+
+    if config['webroot']:
+        root_app.mount(config['webroot'], app)
+    else:
+        root_app.merge(app)
+
+    session_opts = {
+        'session.type': 'cookie',
+        'session.validate_key': config['cookieKey'],
+        'session.auto': True,
+    }
+
+    bottle.run(SessionMiddleware(root_app, session_opts),
+        host = config['host'],
+        port = config['port'],
+        debug = config['debug'],
+        reloader = False,
+        server = 'cherrypy')
+
+    if scheduler:
+        scheduler.stop()
+
+    # The goal was to have all changes to the config call the watcher
+    # method which writes to file. Unfortunately subsections wouldn't
+    # play along, so write to file once we've finished with the service
+    config.write()
 
 def authenticated(func):
     def wrapped(*args, **kwargs):
-		if config['password']:
-			try:
-				beaker_session = request.environ['beaker.session']
-			except:
-				redirectRelative('/login')
+        if config['password']:
+            try:
+                beaker_session = request.environ['beaker.session']
+            except:
+                redirectRelative('/login')
 
-			if beaker_session.get('logged_in', 0):
-				valid = True
-			else:
-				redirectRelative('/login')
-		
-		return func(*args, **kwargs)
+            if beaker_session.get('logged_in', 0):
+                valid = True
+            else:
+                redirectRelative('/login')
+
+        return func(*args, **kwargs)
     return wrapped
 
 def render_template(view, extra={}):
-	jsAPI = ''
-	if config['debug']:
-		jsAPI = api.generate_jsapi()
+    jsAPI = ''
+    if config['debug']:
+        jsAPI = api.generate_jsapi()
 
-	vars = {
-		'apikey'	: config['apikey'] or '',
-		'password'	: config['password'],
-		'debug'		: config['debug'],
-		'jsAPI'		: jsAPI
-	}
-	vars.update(extra)
-	return template(view, vars);
+    vars = {
+        'apikey'    : config['apikey'] or '',
+        'password'    : config['password'],
+        'debug'        : config['debug'],
+        'jsAPI'        : jsAPI
+    }
+    vars.update(extra)
+    return template(view, vars);
 
 @app.route('/')
 def home_page():
-	""" Specific redirect as we cannot redirect relatively if the trailing slash is ommitted """
-	return """<html><body><script>
-	window.location.replace(window.location.href.replace(/\/?$/, '/') + 'devices')
-	</script></body></html>"""
+    """ Specific redirect as we cannot redirect relatively if the trailing slash is ommitted """
+    return """<html><body><script>
+    window.location.replace(window.location.href.replace(/\/?$/, '/') + 'devices')
+    </script></body></html>"""
 
 
 @app.route('/login')
 def login():
-	if config['password']:
-		return render_template('login')
-	else:
-		redirectRelative('/')
+    if config['password']:
+        return render_template('login')
+    else:
+        redirectRelative('/')
 
 def post_get(name, default=''):
     return bottle.request.POST.get(name, default).strip()
 
 @app.post('/postlogin')
 def post_login():
-	"""Authenticate users"""
-	username = post_get('username')
-	password = post_get('password')
+    """Authenticate users"""
+    username = post_get('username')
+    password = post_get('password')
 
-	if username == config['username']:
-		if check_password_hash(config['password'], password):
-			s = bottle.request.environ.get('beaker.session')
-			s['logged_in'] = True
-			redirectRelative('.')
-			return
-	
-	redirectRelative('/login')
+    if username == config['username']:
+        if check_password_hash(config['password'], password):
+            s = bottle.request.environ.get('beaker.session')
+            s['logged_in'] = True
+            redirectRelative('.')
+            return
+
+    redirectRelative('/login')
 
 @app.route('/devices')
 @authenticated
 def devices():
-	return render_template('devices')
+    return render_template('devices')
 
 @app.route('/logout')
 def logout():
-	s = bottle.request.environ['beaker.session']
-	s['logged_in'] = False
-	redirectRelative('/login')
+    s = bottle.request.environ['beaker.session']
+    s['logged_in'] = False
+    redirectRelative('/login')
 
 @app.route('/api')
 @authenticated
 def api():
-	return render_template('api', {'outputFormat': config['outputFormat']})
+    return render_template('api', {'outputFormat': config['outputFormat']})
 
 @app.route('/config')
 @authenticated
 def home_page():
-	return render_template('config')
+    return render_template('config')
 
 @app.route('/scheduler')
 @authenticated
 def scheduler():
-	return render_template('scheduler')
+    return render_template('scheduler')
 
 def redirectRelative(url, code=None):
     """ Aborts execution and causes a 303 or 302 redirect, depending on
         the HTTP protocol version. """
     if code is None:
         code = 303 if request.get('SERVER_PROTOCOL') == "HTTP/1.1" else 302
-	if config['webroot']:
-		url = config['webroot'] + url
-	if len(url) > 1:
-		url = url.rstrip('/').lstrip('/')
+    if config['webroot']:
+        url = config['webroot'] + url
+    if len(url) > 1:
+        url = url.rstrip('/').lstrip('/')
     res = bottle.HTTPResponse("", status=code, Location=url)
     if bottle.response._cookies:
         res._cookies = response._cookies
     raise res
-	
+
 @app.route('/static/<filepath:path>')
 def server_static(filepath='index.html'):
-	return bottle.static_file(filepath, root=utilities.full_path('/static'))
+    return bottle.static_file(filepath, root=utilities.full_path('/static'))
 
 if __name__ == "__main__":
-	main()
+    main()
